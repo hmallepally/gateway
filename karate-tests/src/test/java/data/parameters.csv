@@ -1,0 +1,7 @@
+testCase,productId,subproductId,component,parameterName,parameterValue,effectiveFrom,effectiveTo,status,createdBy,expectedStatus
+Credit Card Scoring,CREDIT_CARD,PREMIUM,SCORING,max_credit_limit,50000,2024-01-01T00:00:00Z,,ACTIVE,test_user,201
+Risk Assessment,CREDIT_CARD,STANDARD,RISK_ASSESSMENT,risk_threshold,0.75,2024-01-01T00:00:00Z,,ACTIVE,test_user,201
+Mortgage Rate,MORTGAGE,STANDARD,PRICING,base_rate,3.5,2024-01-01T00:00:00Z,2024-12-31T23:59:59Z,ACTIVE,test_user,201
+Personal Loan Limit,PERSONAL_LOAN,PREMIUM,SCORING,max_loan_amount,100000,2024-01-01T00:00:00Z,,ACTIVE,test_user,201
+PLOR Processing,PLOR,STANDARD,PROCESSING,timeout_seconds,30,2024-01-01T00:00:00Z,,ACTIVE,test_user,201
+Invalid Product,INVALID,PRODUCT,TEST,test_param,test_value,2024-01-01T00:00:00Z,,ACTIVE,test_user,400

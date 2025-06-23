@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: api-gateway
+data:
+  DATABASE_URL: "postgresql://gateway_user:gateway_password@postgres-service:5432/gateway_db"
+  REDIS_URL: "redis://redis-service:6379"
+  ENVIRONMENT: "production"

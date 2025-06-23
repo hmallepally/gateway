@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group = 'com.gateway'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'com.intuit.karate:karate-junit5:1.4.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
+    
+    // Configure test execution
+    systemProperty 'karate.env', System.getProperty('karate.env', 'dev')
+    systemProperty 'file.encoding', 'UTF-8'
+    
+    // Test reporting
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+    
+    // Parallel execution
+    maxParallelForks = Runtime.runtime.availableProcessors()
+    
+    // Test results
+    reports {
+        html.required = true
+        junitXml.required = true
+    }
+}
+
+// Custom task for running specific test suites
+task smokeTests(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.options', '--tags @smoke'
+    group = 'verification'
+    description = 'Run smoke tests'
+}
+
+task regressionTests(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.options', '--tags @regression'
+    group = 'verification'
+    description = 'Run regression tests'
+}
+
+task performanceTests(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.options', '--tags @performance'
+    group = 'verification'
+    description = 'Run performance tests'
+}
+
+// Task for running tests with different environments
+task testDev(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.env', 'dev'
+    group = 'verification'
+    description = 'Run tests against dev environment'
+}
+
+task testStaging(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.env', 'staging'
+    group = 'verification'
+    description = 'Run tests against staging environment'
+}
+
+task testProd(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.env', 'prod'
+    group = 'verification'
+    description = 'Run tests against production environment'
+}
+
+// Clean up test configurations after execution
+task cleanupTests(type: Test) {
+    useJUnitPlatform()
+    systemProperty 'karate.options', '--tags @cleanup'
+    group = 'verification'
+    description = 'Clean up test data'
+    mustRunAfter test, regressionTests
+}
+
+// Gradle wrapper configuration
+wrapper {
+    gradleVersion = '8.5'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+// Source sets configuration
+sourceSets {
+    test {
+        resources {
+            srcDir 'src/test/java'
+            exclude '**/*.java'
+        }
+    }
+}
