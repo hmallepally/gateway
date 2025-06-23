@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -113,7 +113,7 @@ export function GatewayTester() {
       })
       setResponse({
         status_code: 500,
-        data: { error: error.message }
+        data: { error: error instanceof Error ? error.message : 'Unknown error' }
       })
     } finally {
       setLoading(false)
