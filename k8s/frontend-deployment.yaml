@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway-frontend
+  namespace: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway-frontend
+  template:
+    metadata:
+      labels:
+        app: api-gateway-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: api-gateway-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: api-gateway
+spec:
+  selector:
+    app: api-gateway-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer

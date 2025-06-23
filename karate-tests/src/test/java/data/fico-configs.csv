@@ -1,0 +1,6 @@
+testCase,productCode,version,url,authUrl,clientId,secret,status,createdBy,expectedStatus
+Valid Credit Card,CREDIT_CARD:GOLD,2.0,https://fico-gold.example.com/api,https://fico-gold.example.com/auth,gold_client,gold_secret,ACTIVE,test_user,201
+Valid Mortgage,MORTGAGE:STANDARD,1.5,https://fico-mortgage.example.com/api,https://fico-mortgage.example.com/auth,mortgage_client,mortgage_secret,ACTIVE,test_user,201
+Valid Personal Loan,PERSONAL_LOAN:PREMIUM,1.3,https://fico-pl.example.com/api,https://fico-pl.example.com/auth,pl_client,pl_secret,ACTIVE,test_user,201
+Duplicate Product,CREDIT_CARD:PREMIUM,1.0,https://duplicate.example.com/api,https://duplicate.example.com/auth,dup_client,dup_secret,ACTIVE,test_user,409
+Invalid URL,INVALID:CONFIG,1.0,invalid-url,invalid-auth-url,invalid_client,invalid_secret,ACTIVE,test_user,400
