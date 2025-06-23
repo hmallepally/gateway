@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.115.13"}
 psycopg = {extras = ["binary"], version = "^3.2.9"}
+psycopg2-binary = "^2.9.9"
 redis = "^6.2.0"
 pydantic-settings = "^2.10.0"
 sqlalchemy = "^2.0.41"
