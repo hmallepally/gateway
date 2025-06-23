@@ -314,16 +314,22 @@ chmod +x deploy.sh
 # Deploy all components
 ./deploy.sh
 
-# Check deployment status
-kubectl get pods -n gateway-system
-kubectl get services -n gateway-system
+or run the commands individually.
+ * kubectl apply -f k8s/backend-deployment.yaml
+ * kubectl apply -f k8s/frontend-deployment.yaml
+ * kubectl get pods -n api-gateway
+ * kubectl describe pods -n api-gateway
+
+### Check deployment status
+ * kubectl get pods -n api-gateway
+ * kubectl get services -n api-gateway
 ```
 
 **Access the application:**
 ```bash
 # Port forward to access locally
-kubectl port-forward -n gateway-system service/frontend-service 8080:80
-kubectl port-forward -n gateway-system service/backend-service 8000:8000
+kubectl port-forward -n api-gateway service/frontend-service 8080:80
+kubectl port-forward -n api-gateway service/backend-service 8000:8000
 ```
 
 ## 🧪 Testing
