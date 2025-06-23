@@ -11,6 +11,7 @@ kubectl apply -f namespace.yaml
 echo "🐘 Deploying PostgreSQL..."
 kubectl apply -f postgres-configmap.yaml
 kubectl apply -f postgres-secret.yaml
+kubectl apply -f postgres-init-configmap.yaml
 kubectl apply -f postgres-deployment.yaml
 
 echo "🔴 Deploying Redis..."
