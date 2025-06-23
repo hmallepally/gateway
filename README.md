@@ -301,6 +301,8 @@ docker-compose down
 - Kubernetes cluster (minikube, kind, or cloud provider)
 - kubectl configured
 - Docker images built and pushed to registry
+  * docker build -t api-gateway-backend:latest -f .\Dockerfile.backend .
+  * docker build -t api-gateway-frontend:latest -f .\Dockerfile.frontend .
 
 **Deploy to Kubernetes:**
 ```bash
