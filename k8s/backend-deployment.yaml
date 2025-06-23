@@ -16,6 +16,7 @@ spec:
       containers:
       - name: backend
         image: api-gateway-backend:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         envFrom:
