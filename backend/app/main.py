@@ -1,12 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from datetime import datetime
 import logging
+import jwt
 
 from app.database import get_db, create_tables
-from app.models import FicoEnvironmentConfig, ConfigurableParameters, ChangeLog
+from app.models import FicoEnvironmentConfig, ConfigurableParameters, ChangeLog, User
 from app.schemas import (
     FicoEnvironmentConfigCreate, FicoEnvironmentConfigUpdate, FicoEnvironmentConfigResponse,
     ConfigurableParametersCreate, ConfigurableParametersUpdate, ConfigurableParametersResponse,
@@ -14,20 +16,46 @@ from app.schemas import (
 )
 from app.services.gateway_service import gateway_service
 from app.services.cache_service import cache_service
+from app.services.oauth_service import oauth_app
+from app.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="API Gateway", description="Enterprise API Gateway and Configuration Management System")
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
+    try:
+        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
+        user = db.query(User).filter(User.user_id == payload["user_id"]).first()
+        
+        if not user or not user.is_active:
+            raise HTTPException(status_code=401, detail="Invalid or inactive user")
+        
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def require_role(required_role: str):
+    def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role != required_role and current_user.role != "APPROVER":
+            raise HTTPException(status_code=403, detail=f"Requires {required_role} role")
+        return current_user
+    return role_checker
 
 # Disable CORS. Do not remove this for full-stack development.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+app.mount("/auth", oauth_app)
 
 @app.on_event("startup")
 async def startup_event():
@@ -59,10 +87,14 @@ async def process_gateway_request(
 @app.post("/api/fico-configs", response_model=FicoEnvironmentConfigResponse)
 async def create_fico_config(
     config: FicoEnvironmentConfigCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("EDITOR"))
 ):
-    """Create new Fico environment configuration"""
-    db_config = FicoEnvironmentConfig(**config.dict())
+    config_dict = config.dict()
+    config_dict["created_by"] = current_user.user_id
+    config_dict["status"] = "PENDING_APPROVAL"
+    
+    db_config = FicoEnvironmentConfig(**config_dict)
     db.add(db_config)
     db.commit()
     db.refresh(db_config)
@@ -93,9 +125,9 @@ async def update_fico_config(
     product_code: str,
     version: str,
     config_update: FicoEnvironmentConfigUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("EDITOR"))
 ):
-    """Update Fico environment configuration"""
     config = db.query(FicoEnvironmentConfig).filter(
         FicoEnvironmentConfig.product_code == product_code,
         FicoEnvironmentConfig.version == version
@@ -103,7 +135,12 @@ async def update_fico_config(
     if not config:
         raise HTTPException(status_code=404, detail="Configuration not found")
     
-    for field, value in config_update.dict(exclude_unset=True).items():
+    update_dict = config_update.dict(exclude_unset=True)
+    update_dict["modified_by"] = current_user.user_id
+    update_dict["modified_on"] = datetime.utcnow()
+    update_dict["status"] = "PENDING_APPROVAL"
+    
+    for field, value in update_dict.items():
         setattr(config, field, value)
     
     db.commit()
@@ -113,10 +150,14 @@ async def update_fico_config(
 @app.post("/api/parameters", response_model=ConfigurableParametersResponse)
 async def create_parameter(
     parameter: ConfigurableParametersCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("EDITOR"))
 ):
-    """Create new configurable parameter"""
-    db_parameter = ConfigurableParameters(**parameter.dict())
+    parameter_dict = parameter.dict()
+    parameter_dict["created_by"] = current_user.user_id
+    parameter_dict["status"] = "PENDING_APPROVAL"
+    
+    db_parameter = ConfigurableParameters(**parameter_dict)
     db.add(db_parameter)
     db.commit()
     db.refresh(db_parameter)
@@ -142,16 +183,16 @@ async def get_parameters_by_product(
         ConfigurableParameters.subproduct_id == subproduct_id
     ).all()
 
-@app.put("/api/parameters/{product_id}/{subproduct_id}/{component}/{parameter}")
+@app.put("/api/parameters/{product_id}/{subproduct_id}/{component}/{parameter}", response_model=ConfigurableParametersResponse)
 async def update_parameter(
     product_id: str,
     subproduct_id: str,
     component: str,
     parameter: str,
     parameter_update: ConfigurableParametersUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("EDITOR"))
 ):
-    """Update configurable parameter"""
     param = db.query(ConfigurableParameters).filter(
         ConfigurableParameters.product_id == product_id,
         ConfigurableParameters.subproduct_id == subproduct_id,
@@ -162,7 +203,12 @@ async def update_parameter(
     if not param:
         raise HTTPException(status_code=404, detail="Parameter not found")
     
-    for field, value in parameter_update.dict(exclude_unset=True).items():
+    update_dict = parameter_update.dict(exclude_unset=True)
+    update_dict["modified_by"] = current_user.user_id
+    update_dict["modified_on"] = datetime.utcnow()
+    update_dict["status"] = "PENDING_APPROVAL"
+    
+    for field, value in update_dict.items():
         setattr(param, field, value)
     
     db.commit()
@@ -188,26 +234,42 @@ async def get_pending_changes(db: Session = Depends(get_db)):
 async def approve_change(
     log_id: int,
     approval: ApprovalRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("APPROVER"))
 ):
-    """Approve or reject a pending change"""
     change_log = db.query(ChangeLog).filter(ChangeLog.log_id == log_id).first()
     if not change_log:
         raise HTTPException(status_code=404, detail="Change log not found")
     
+    if change_log.status != "PENDING_APPROVAL":
+        raise HTTPException(status_code=400, detail="Change is not pending approval")
+    
+    if change_log.changed_by == current_user.user_id:
+        raise HTTPException(status_code=403, detail="Cannot approve your own changes")
+    
     if approval.action == "APPROVE":
         change_log.status = "APPROVED"
-        change_log.approved_by = approval.approved_by
+        change_log.approved_by = current_user.user_id
         change_log.approved_on = datetime.utcnow()
+        
+        await apply_approved_change(db, change_log)
+        
     elif approval.action == "REJECT":
         change_log.status = "REJECTED"
-        change_log.reviewed_by = approval.approved_by
+        change_log.reviewed_by = current_user.user_id
         change_log.reviewed_on = datetime.utcnow()
     
     change_log.comments = approval.comments
     db.commit()
     
     return {"message": f"Change {approval.action.lower()}ed successfully"}
+
+async def apply_approved_change(db: Session, change_log: ChangeLog):
+    if change_log.table_name == "configurable_parameters":
+        parts = change_log.record_id.split(":")
+        if len(parts) >= 4:
+            product_id, subproduct_id = parts[0], parts[1]
+            cache_service.invalidate_cache(product_id, subproduct_id)
 
 @app.post("/api/cache/refresh/{product_id}/{subproduct_id}")
 async def refresh_cache(

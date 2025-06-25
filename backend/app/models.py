@@ -5,6 +5,17 @@ from datetime import datetime
 
 Base = declarative_base()
 
+class User(Base):
+    __tablename__ = "users"
+    
+    user_id = Column(String(100), primary_key=True)
+    email = Column(String(255), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_on = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime)
+
 class FicoEnvironmentConfig(Base):
     __tablename__ = "fico_environment_config"
     
@@ -13,7 +24,7 @@ class FicoEnvironmentConfig(Base):
     url = Column(String(500), nullable=False)
     authentication_url = Column(String(500), nullable=False)
     client_id = Column(String(100), nullable=False)
-    secret = Column(Text, nullable=False)  # Will be encrypted
+    secret = Column(Text, nullable=False)
     created_by = Column(String(100), nullable=False)
     created_on = Column(DateTime, default=datetime.utcnow)
     modified_by = Column(String(100))
