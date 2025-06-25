@@ -25,7 +25,12 @@ interface Parameter {
   status: string
 }
 
-export function ParameterManager() {
+interface ParameterManagerProps {
+  user: any
+  token: string
+}
+
+export function ParameterManager({ user, token }: ParameterManagerProps) {
   const [parameters, setParameters] = useState<Parameter[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -50,7 +55,11 @@ export function ParameterManager() {
 
   const fetchParameters = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/parameters')
+      const response = await fetch('http://localhost:8000/api/parameters', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
       setParameters(data)
     } catch (error) {
@@ -70,7 +79,8 @@ export function ParameterManager() {
       const submitData = {
         ...formData,
         effective_from: new Date(formData.effective_from).toISOString(),
-        effective_to: formData.effective_to ? new Date(formData.effective_to).toISOString() : null
+        effective_to: formData.effective_to ? new Date(formData.effective_to).toISOString() : null,
+        created_by: user.user_id
       }
 
       const url = editingParameter 
@@ -83,6 +93,7 @@ export function ParameterManager() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(submitData),
       })
@@ -141,7 +152,10 @@ export function ParameterManager() {
   const refreshCache = async (productId: string, subproductId: string) => {
     try {
       const response = await fetch(`http://localhost:8000/api/cache/refresh/${productId}/${subproductId}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       
       if (response.ok) {
@@ -180,13 +194,17 @@ export function ParameterManager() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Configurable Parameters</h3>
-          <p className="text-sm text-gray-600">Manage product-specific parameters with effective dating</p>
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex-1 mr-4">
+          <h3 className="text-lg font-semibold text-blue-900">Configurable Parameters</h3>
+          <p className="text-sm text-blue-700">Manage product-specific parameters with effective dating</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setEditingParameter(null); }}>
+            <Button 
+              onClick={() => { resetForm(); setEditingParameter(null); }}
+              disabled={user?.role !== 'EDITOR' && user?.role !== 'APPROVER'}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Parameter
             </Button>
@@ -304,9 +322,8 @@ export function ParameterManager() {
                   <Label htmlFor="created_by">Created By</Label>
                   <Input
                     id="created_by"
-                    value={formData.created_by}
-                    onChange={(e) => setFormData({...formData, created_by: e.target.value})}
-                    required
+                    value={user?.user_id || formData.created_by}
+                    disabled
                   />
                 </div>
                 <div>
@@ -338,48 +355,49 @@ export function ParameterManager() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Parameters</CardTitle>
-          <CardDescription>
+      <Card className="border-blue-200 shadow-lg">
+        <CardHeader className="bg-blue-50 border-b border-blue-200">
+          <CardTitle className="text-blue-900">Current Parameters</CardTitle>
+          <CardDescription className="text-blue-700">
             {parameters.length} parameter{parameters.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Subproduct</TableHead>
-                <TableHead>Component</TableHead>
-                <TableHead>Parameter</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Effective Period</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="bg-blue-50">
+                <TableHead className="text-blue-900 font-semibold">Product</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Subproduct</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Component</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Parameter</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Value</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Effective Period</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Status</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {parameters.map((param, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{param.product_id}</TableCell>
-                  <TableCell>{param.subproduct_id}</TableCell>
-                  <TableCell>{param.component}</TableCell>
-                  <TableCell>{param.parameter}</TableCell>
-                  <TableCell className="font-mono text-sm">{param.value}</TableCell>
+                <TableRow key={index} className="hover:bg-blue-50">
+                  <TableCell className="font-medium text-blue-900">{param.product_id}</TableCell>
+                  <TableCell className="text-blue-900">{param.subproduct_id}</TableCell>
+                  <TableCell className="text-blue-900">{param.component}</TableCell>
+                  <TableCell className="text-blue-900">{param.parameter}</TableCell>
+                  <TableCell className="font-mono text-sm text-blue-700">{param.value}</TableCell>
                   <TableCell>
-                    <div className="text-sm">
+                    <div className="text-sm text-blue-900">
                       <div>From: {formatDate(param.effective_from)}</div>
                       {param.effective_to && <div>To: {formatDate(param.effective_to)}</div>}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Badge variant={param.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                      <Badge variant={param.status === 'ACTIVE' ? 'default' : 'secondary'}
+                             className={param.status === 'ACTIVE' ? 'bg-blue-600' : 'bg-blue-200 text-blue-800'}>
                         {param.status}
                       </Badge>
                       {isEffective(param) && (
-                        <Badge variant="outline" className="text-green-600 border-green-600">
+                        <Badge variant="outline" className="text-blue-600 border-blue-600">
                           Current
                         </Badge>
                       )}
@@ -391,6 +409,8 @@ export function ParameterManager() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(param)}
+                        disabled={user?.role !== 'EDITOR' && user?.role !== 'APPROVER'}
+                        className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -398,6 +418,7 @@ export function ParameterManager() {
                         variant="outline"
                         size="sm"
                         onClick={() => refreshCache(param.product_id, param.subproduct_id)}
+                        className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                       >
                         <RefreshCw className="w-4 h-4" />
                       </Button>
@@ -408,7 +429,7 @@ export function ParameterManager() {
             </TableBody>
           </Table>
           {parameters.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-blue-600">
               No parameters found. Add your first parameter to get started.
             </div>
           )}
