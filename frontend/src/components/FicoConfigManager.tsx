@@ -24,7 +24,12 @@ interface FicoConfig {
   status: string
 }
 
-export function FicoConfigManager() {
+interface FicoConfigManagerProps {
+  user: any
+  token: string
+}
+
+export function FicoConfigManager({ user, token }: FicoConfigManagerProps) {
   const [configs, setConfigs] = useState<FicoConfig[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -49,7 +54,11 @@ export function FicoConfigManager() {
 
   const fetchConfigs = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/fico-configs')
+      const response = await fetch('http://localhost:8000/api/fico-configs', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
       setConfigs(data)
     } catch (error) {
@@ -66,6 +75,11 @@ export function FicoConfigManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      const submitData = {
+        ...formData,
+        created_by: user.user_id
+      }
+
       const url = editingConfig 
         ? `http://localhost:8000/api/fico-configs/${editingConfig.product_code}/${editingConfig.version}`
         : 'http://localhost:8000/api/fico-configs'
@@ -76,8 +90,9 @@ export function FicoConfigManager() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -147,13 +162,17 @@ export function FicoConfigManager() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Fico Environment Configurations</h3>
-          <p className="text-sm text-gray-600">Manage PLOR and DM environment settings</p>
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex-1 mr-4">
+          <h3 className="text-lg font-semibold text-blue-900">Fico Environment Configurations</h3>
+          <p className="text-sm text-blue-700">Manage PLOR and DM environment settings</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setEditingConfig(null); }}>
+            <Button 
+              onClick={() => { resetForm(); setEditingConfig(null); }}
+              disabled={user?.role !== 'EDITOR' && user?.role !== 'APPROVER'}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Configuration
             </Button>
@@ -241,9 +260,8 @@ export function FicoConfigManager() {
                   <Label htmlFor="created_by">Created By</Label>
                   <Input
                     id="created_by"
-                    value={formData.created_by}
-                    onChange={(e) => setFormData({...formData, created_by: e.target.value})}
-                    required
+                    value={user?.user_id || formData.created_by}
+                    disabled
                   />
                 </div>
                 <div>
@@ -275,64 +293,68 @@ export function FicoConfigManager() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Configurations</CardTitle>
-          <CardDescription>
+      <Card className="border-blue-200 shadow-lg">
+        <CardHeader className="bg-blue-50 border-b border-blue-200">
+          <CardTitle className="text-blue-900">Current Configurations</CardTitle>
+          <CardDescription className="text-blue-700">
             {configs.length} configuration{configs.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>API URL</TableHead>
-                <TableHead>Client ID</TableHead>
-                <TableHead>Secret</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created By</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="bg-blue-50">
+                <TableHead className="text-blue-900 font-semibold">Product</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Version</TableHead>
+                <TableHead className="text-blue-900 font-semibold">API URL</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Client ID</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Secret</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Status</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Created By</TableHead>
+                <TableHead className="text-blue-900 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {configs.map((config) => {
                 const configKey = `${config.product_code}-${config.version}`
                 return (
-                  <TableRow key={configKey}>
-                    <TableCell className="font-medium">{config.product_code}</TableCell>
-                    <TableCell>{config.version}</TableCell>
-                    <TableCell className="max-w-xs truncate" title={config.url}>
+                  <TableRow key={configKey} className="hover:bg-blue-50">
+                    <TableCell className="font-medium text-blue-900">{config.product_code}</TableCell>
+                    <TableCell className="text-blue-900">{config.version}</TableCell>
+                    <TableCell className="max-w-xs truncate text-blue-700" title={config.url}>
                       {config.url}
                     </TableCell>
-                    <TableCell>{config.client_id}</TableCell>
+                    <TableCell className="text-blue-900">{config.client_id}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm">
+                        <span className="font-mono text-sm text-blue-900">
                           {showSecrets[configKey] ? config.secret : maskSecret(config.secret)}
                         </span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleSecretVisibility(configKey)}
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
                         >
                           {showSecrets[configKey] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={config.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                      <Badge variant={config.status === 'ACTIVE' ? 'default' : 'secondary'}
+                             className={config.status === 'ACTIVE' ? 'bg-blue-600' : 'bg-blue-200 text-blue-800'}>
                         {config.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{config.created_by}</TableCell>
+                    <TableCell className="text-blue-900">{config.created_by}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(config)}
+                          disabled={user?.role !== 'EDITOR' && user?.role !== 'APPROVER'}
+                          className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -344,7 +366,7 @@ export function FicoConfigManager() {
             </TableBody>
           </Table>
           {configs.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-blue-600">
               No configurations found. Add your first configuration to get started.
             </div>
           )}

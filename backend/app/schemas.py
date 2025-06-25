@@ -89,6 +89,28 @@ class GatewayResponse(BaseModel):
 
 class ApprovalRequest(BaseModel):
     log_id: int
-    action: str  # "APPROVE" or "REJECT"
+    action: str
     comments: Optional[str] = None
     approved_by: str
+
+class UserResponse(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    role: str
+    is_active: bool
+    created_on: datetime
+    last_login: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int
+    user: UserResponse

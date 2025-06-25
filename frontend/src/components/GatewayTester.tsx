@@ -141,16 +141,16 @@ export function GatewayTester() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">Gateway Request Tester</h3>
-        <p className="text-sm text-gray-600">Test API Gateway routing and parameter augmentation</p>
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <h3 className="text-lg font-semibold text-blue-900">Gateway Request Tester</h3>
+        <p className="text-sm text-blue-700">Test API Gateway routing and parameter augmentation</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Configuration</CardTitle>
-            <CardDescription>
+        <Card className="border-blue-200 shadow-lg">
+          <CardHeader className="bg-blue-50 border-b border-blue-200">
+            <CardTitle className="text-blue-900">Request Configuration</CardTitle>
+            <CardDescription className="text-blue-700">
               Configure your gateway request or use sample data
             </CardDescription>
           </CardHeader>
@@ -161,6 +161,7 @@ export function GatewayTester() {
                   variant="outline"
                   size="sm"
                   onClick={() => loadSampleRequest('creditCard')}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                 >
                   Credit Card Sample
                 </Button>
@@ -168,6 +169,7 @@ export function GatewayTester() {
                   variant="outline"
                   size="sm"
                   onClick={() => loadSampleRequest('personalLoan')}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                 >
                   Personal Loan Sample
                 </Button>
@@ -175,57 +177,61 @@ export function GatewayTester() {
                   variant="outline"
                   size="sm"
                   onClick={() => loadSampleRequest('mortgage')}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                 >
                   Mortgage Sample
                 </Button>
               </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="form">Form Input</TabsTrigger>
-                  <TabsTrigger value="json">JSON Input</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-white border border-blue-200">
+                  <TabsTrigger value="form" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700 hover:bg-blue-50">Form Input</TabsTrigger>
+                  <TabsTrigger value="json" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700 hover:bg-blue-50">JSON Input</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="form" className="space-y-4">
                   <div>
-                    <Label htmlFor="bomVersionId">BOM Version ID</Label>
+                    <Label htmlFor="bomVersionId" className="text-blue-700 font-medium">BOM Version ID</Label>
                     <Input
                       id="bomVersionId"
                       value={requestData.bomVersionId}
                       onChange={(e) => setRequestData({...requestData, bomVersionId: e.target.value})}
                       placeholder="PRODUCT:SUBPRODUCT:VERSION"
+                      className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-blue-600 mt-1">
                       Format: PRODUCT:SUBPRODUCT:VERSION (e.g., CREDIT_CARD:PREMIUM:1.0)
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="customerId">Customer ID</Label>
+                      <Label htmlFor="customerId" className="text-blue-700 font-medium">Customer ID</Label>
                       <Input
                         id="customerId"
                         value={requestData.customerId}
                         onChange={(e) => setRequestData({...requestData, customerId: e.target.value})}
                         placeholder="CUST_12345"
+                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="applicationId">Application ID</Label>
+                      <Label htmlFor="applicationId" className="text-blue-700 font-medium">Application ID</Label>
                       <Input
                         id="applicationId"
                         value={requestData.applicationId}
                         onChange={(e) => setRequestData({...requestData, applicationId: e.target.value})}
                         placeholder="APP_67890"
+                        className="border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="requestType">Request Type</Label>
+                    <Label htmlFor="requestType" className="text-blue-700 font-medium">Request Type</Label>
                     <Select 
                       value={requestData.requestType} 
                       onValueChange={(value) => setRequestData({...requestData, requestType: value})}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-blue-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -241,14 +247,14 @@ export function GatewayTester() {
 
                 <TabsContent value="json" className="space-y-4">
                   <div>
-                    <Label htmlFor="customJson">Custom JSON Request</Label>
+                    <Label htmlFor="customJson" className="text-blue-700 font-medium">Custom JSON Request</Label>
                     <Textarea
                       id="customJson"
                       value={customJson}
                       onChange={(e) => setCustomJson(e.target.value)}
                       placeholder="Enter your custom JSON request here..."
                       rows={12}
-                      className="font-mono text-sm"
+                      className="font-mono text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                 </TabsContent>
@@ -257,7 +263,7 @@ export function GatewayTester() {
               <Button 
                 onClick={sendGatewayRequest} 
                 disabled={loading}
-                className="w-full"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {loading ? (
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -270,10 +276,10 @@ export function GatewayTester() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Response</CardTitle>
-            <CardDescription>
+        <Card className="border-blue-200 shadow-lg">
+          <CardHeader className="bg-blue-50 border-b border-blue-200">
+            <CardTitle className="text-blue-900">Response</CardTitle>
+            <CardDescription className="text-blue-700">
               Gateway response with routing and parameter augmentation results
             </CardDescription>
           </CardHeader>
@@ -283,6 +289,7 @@ export function GatewayTester() {
                 <div className="flex items-center justify-between">
                   <Badge 
                     variant={response.status_code < 400 ? "default" : "destructive"}
+                    className={response.status_code < 400 ? "bg-blue-600 text-white" : "bg-red-600 text-white"}
                   >
                     Status: {response.status_code}
                   </Badge>
@@ -290,19 +297,20 @@ export function GatewayTester() {
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(JSON.stringify(response.data, null, 2))}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                   >
                     <Copy className="w-4 h-4 mr-1" />
                     Copy
                   </Button>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="text-sm overflow-auto max-h-96">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <pre className="text-sm overflow-auto max-h-96 text-blue-900">
                     {JSON.stringify(response.data, null, 2)}
                   </pre>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-blue-600">
                 No response yet. Send a request to see the gateway response.
               </div>
             )}
@@ -310,35 +318,35 @@ export function GatewayTester() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Gateway Testing Guide</CardTitle>
-          <CardDescription>
+      <Card className="border-blue-200 shadow-lg">
+        <CardHeader className="bg-blue-50 border-b border-blue-200">
+          <CardTitle className="text-blue-900">Gateway Testing Guide</CardTitle>
+          <CardDescription className="text-blue-700">
             Understanding how the API Gateway processes requests
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold mb-2">Request Routing</h4>
-              <p className="text-sm text-gray-600">
-                The gateway extracts the <code className="bg-gray-100 px-1 rounded">bomVersionId</code> from your request 
+              <h4 className="font-semibold mb-2 text-blue-900">Request Routing</h4>
+              <p className="text-sm text-blue-700">
+                The gateway extracts the <code className="bg-blue-100 px-1 rounded text-blue-800">bomVersionId</code> from your request 
                 to determine which Fico environment (PLOR/DM) to route to based on the product and version.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2">Parameter Augmentation</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-semibold mb-2 text-blue-900">Parameter Augmentation</h4>
+              <p className="text-sm text-blue-700">
                 Cached parameters matching your product/subproduct are automatically added to your request 
                 before forwarding to the Fico endpoint. Check the response to see augmented parameters.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2">Sample BOM Version IDs</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li><code className="bg-gray-100 px-1 rounded">CREDIT_CARD:PREMIUM:1.0</code> - Premium credit card processing</li>
-                <li><code className="bg-gray-100 px-1 rounded">PERSONAL_LOAN:SECURED:2.1</code> - Secured personal loan assessment</li>
-                <li><code className="bg-gray-100 px-1 rounded">MORTGAGE:CONVENTIONAL:3.0</code> - Conventional mortgage underwriting</li>
+              <h4 className="font-semibold mb-2 text-blue-900">Sample BOM Version IDs</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li><code className="bg-blue-100 px-1 rounded text-blue-800">CREDIT_CARD:PREMIUM:1.0</code> - Premium credit card processing</li>
+                <li><code className="bg-blue-100 px-1 rounded text-blue-800">PERSONAL_LOAN:SECURED:2.1</code> - Secured personal loan assessment</li>
+                <li><code className="bg-blue-100 px-1 rounded text-blue-800">MORTGAGE:CONVENTIONAL:3.0</code> - Conventional mortgage underwriting</li>
               </ul>
             </div>
           </div>

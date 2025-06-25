@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.database import SessionLocal, create_tables
-from app.models import FicoEnvironmentConfig, ConfigurableParameters, ChangeLog
+from app.models import FicoEnvironmentConfig, ConfigurableParameters, ChangeLog, User
 
 def create_seed_data():
     """Create dummy data for testing"""
@@ -12,6 +12,33 @@ def create_seed_data():
         db.query(ChangeLog).delete()
         db.query(ConfigurableParameters).delete()
         db.query(FicoEnvironmentConfig).delete()
+        db.query(User).delete()
+        db.commit()
+        
+        users = [
+            User(
+                user_id="editor",
+                email="editor@example.com",
+                name="Editor User",
+                role="EDITOR"
+            ),
+            User(
+                user_id="approver",
+                email="approver@example.com", 
+                name="Approver User",
+                role="APPROVER"
+            ),
+            User(
+                user_id="admin",
+                email="admin@example.com",
+                name="Admin User", 
+                role="APPROVER"
+            )
+        ]
+        
+        for user in users:
+            db.merge(user)
+        db.commit()
         
         fico_configs = [
             FicoEnvironmentConfig(
